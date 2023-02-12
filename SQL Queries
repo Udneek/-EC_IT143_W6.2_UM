@@ -1,0 +1,97 @@
+NAME:    Uduak Mbaba
+PURPOSE: Answer SQL Database Questions
+MODIFICATION LOG:
+Ver      Date        Author        Description
+-----   ----------   -----------   -------------------------------------------------------------------------------
+1.0     02/11/2023   Uduak     1. Built this script for EC IT143
+RUNTIME: 
+Xm Xs
+NOTES: 
+This script answers the questions created by myself and others
+ 
+******************************************************************************************************************/
+
+-- Q1: 	1. What is the number of employees (male and female) under 40 years old in the company? marginal Complexity. Author: Uduak Mbaba
+-- A1: The number of employees age 40 and under is 289
+
+       SELECT COUNT(*) AS Employee_Under_40
+        FROM HumanResources.Employee 
+        WHERE Gender IN ('M', 'F') 
+        AND BirthDate > DATEADD(year, -40, GETDATE())
+
+
+--Q2:	1. Can you calculate the maximum number of columns each table uses? Metadata. Author: Jorge Santos
+--A2 the answer is:
+
+        SELECT count(*) as No_of_Column 
+        FROM information_schema.columns 
+        WHERE table_name ='Person.Person';
+
+--Q3: What is the total sales amount for AdventureWorks in the year 2014? Marginal Question
+--    Author: Uduak Mbaba
+--A3: The answer is:
+      
+      SELECT SUM(TotalDue) AS TotalAmount
+      FROM Purchasing.PurchaseOrderHeader
+      WHERE YEAR(OrderDate) = 2014;
+
+--Q4: How many sales were made by the salesperson named "Stephen Jiang" in the year 2014? What was the total value of these sales?
+--    Moderate Complexity Author: Jorge Santos
+--A4:The answer is:
+
+      SELECT COUNT(*) as NumSales, SUM(TotalDue) as TotalSalesValue
+        FROM Sales.SalesOrderHeader soh
+          JOIN Sales.SalesPerson sp ON sp.BusinessEntityID = soh.SalesPersonID
+      WHERE sp.FullName = 'Stephen Jiang' 
+          AND YEAR(soh.OrderDate) = 2014
+
+--Q5:  Can you create a list in AdventureWorks that matches the city in the Person.Address table to the names in the Person.person table? 
+       Metadata Author: David Villamediana
+--A5:  The answer is:
+
+      SELECT a.City, p.FirstName, p.LastName
+      FROM Person.Address a
+      JOIN Person.Person p ON a.PersonID = p.BusinessEntityID;
+
+
+--Q6: I need to understand and know more about purchasing and shippingrates during the last 5 years. Can you create a list that will tell each different shipping rates
+--    per month? I need to know how much was spent on each shipping method. Increased Complexity. Author: Jacob Ericson
+--A6: the answer is:
+    SELECT 
+      YEAR(OrderDate) AS OrderYear, 
+      MONTH(OrderDate) AS OrderMonth, 
+      Freight, 
+          SUM(TotalDue) AS TotalSpent
+    FROM (
+          SELECT 
+          OrderDate, 
+          Freight, 
+          TotalDue
+          FROM Sales.SalesOrderHeader
+          UNION ALL
+          SELECT 
+          OrderDate, 
+          0 AS ShippingRate, 
+          TotalDue
+          FROM Purchasing.PurchaseOrderHeader
+    ) AS AllOrders
+      WHERE OrderDate >= DATEADD(YEAR, -5, GETDATE())
+      GROUP BY YEAR(OrderDate), MONTH(OrderDate), Freight;
+
+--Q7: I am interested in product categories. From its category to the specific type of product. Based on the information given, what are the three most common
+products of the company and to which category do they belong? Moderate Complexity. Author: David Villamediana
+--A7: the answer is:
+--    
+    SELECT TOP 3 ProductCategoryID, Name, COUNT(*) AS TotalSales
+    FROM Production.ProductSubcategory
+    GROUP BY ProductCategoryID, Name
+    ORDER BY TotalSales DESC
+
+  
+--Q8: The company is currently verifying employee's salaries and future salary raises. The decision would be based on the age and time the employee has spent
+with the company. Can you create a list that will tell me this information in alphabetical order? I need to know the name, age , gender and time spent in the company.
+using as reference the actual date(in number of days) to according to and make an informed decision. Increased Complexity. Author: Jorge Santos
+--A8: the answer is:
+        SELECT BusinessEntityID, BirthDate, Gender, HireDate, DATEDIFF(day, HireDate, GETDATE()) AS TimeInCompany
+        FROM HumanResources.Employee
+        ORDER BY BusinessEntityID ASC
